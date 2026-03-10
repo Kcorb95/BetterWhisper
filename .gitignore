@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+.build/
+*.app/
+xcuserdata/
+project.xcworkspace/
+DerivedData/
+
+# Node
+node_modules/
+.next/
+.vercel
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.env*.local
+
+# Claude Code local settings
+.claude/settings.local.json
