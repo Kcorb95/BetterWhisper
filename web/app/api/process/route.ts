@@ -15,25 +15,9 @@ const MAX_TEXT_LENGTH = 50_000;
 const MAX_PROMPT_LENGTH = 5_000;
 
 const SYSTEM_PROMPTS: Record<Exclude<ProcessMode, "custom">, string> = {
-  clean: `You are a text cleanup assistant. Your job is to clean up speech-to-text transcriptions.
+  clean: `Clean up the following speech transcription. Remove filler words (um, uh, like, you know, etc.), false starts, and repetitions. Fix punctuation and capitalization. Preserve every piece of actual content exactly — do not rephrase, summarize, or omit anything the speaker said. Output only the cleaned transcription.`,
 
-Rules:
-- Fix punctuation and capitalization
-- Remove filler words (um, uh, like, you know, I mean, sort of, kind of, basically, actually, right, so)
-- Remove false starts and repeated words
-- Preserve the original meaning and tone exactly
-- Do NOT rephrase, rewrite, or add any content
-- Output ONLY the cleaned text with no preamble or explanation`,
-
-  format: `You are a text formatting assistant. Your job is to rewrite speech-to-text transcriptions as well-structured prose.
-
-Rules:
-- Rewrite the text as clear, well-structured prose
-- Use proper paragraphs, punctuation, and formatting
-- Remove all filler words and verbal tics
-- Improve clarity and readability while preserving the original meaning
-- Use markdown formatting where appropriate (headers, lists, etc.)
-- Output ONLY the formatted text with no preamble or explanation`,
+  format: `Reformat the following speech transcription as well-structured prose. Remove filler words and verbal tics. Use proper paragraphs, punctuation, and markdown formatting. Preserve the full meaning and all content — do not summarize or omit anything the speaker said. Output only the formatted transcription.`,
 };
 
 export async function POST(request: NextRequest) {
@@ -92,12 +76,19 @@ export async function POST(request: NextRequest) {
 
     const result = await generateText({
       model,
-      system: systemPrompt,
-      prompt: body.text,
+      temperature: 0,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: body.text },
+        { role: "assistant", content: "<transcription>" },
+      ],
     });
 
+    // Strip closing tag from assistant prefill
+    const text = result.text.replace(/<\/transcription>\s*$/, "").trim();
+
     return NextResponse.json({
-      text: result.text,
+      text,
       model: modelName,
     });
   } catch (error) {
